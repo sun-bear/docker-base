@@ -1,0 +1,52 @@
+ARG ALPINE_VER=latest
+ARG REGISTRY=docker.io
+ARG REPOSITORY=sunnybear/base
+FROM ${REGISTRY}/library/alpine:${ALPINE_VER}
+
+# Include apk-install
+COPY bin.alpine/ /usr/bin/
+
+RUN apk-install \
+      ca-certificates \
+      curl \
+      rsync \
+      shadow
+
+# Install wait-for-it.sh
+RUN curl -sSL https://github.com/vishnubob/wait-for-it/raw/master/wait-for-it.sh >/usr/bin/wait-for-it.sh \
+ && chmod 755 /usr/bin/wait-for-it.sh
+
+# Install tini
+RUN apk-install tini
+
+# Install gosu
+ARG GOSU_VER=1.10
+ARG GOSU_ARCH=amd64
+RUN curl -sSL "https://github.com/tianon/gosu/releases/download/${GOSU_VER}/gosu-${GOSU_ARCH}" >/usr/bin/gosu \
+ && chmod 755 /usr/bin/gosu \
+ && gosu nobody true
+
+# Include various scripts (entrypointd.sh, healthcheckd.sh, fix-perms)
+COPY bin/ /usr/bin/
+
+COPY healthcheck.d/ /etc/healthcheck.d/
+HEALTHCHECK CMD /usr/bin/healthcheckd.sh
+
+COPY entrypoint.d/ /etc/entrypoint.d/
+ENTRYPOINT ["/usr/bin/entrypointd.sh"]
+
+CMD ["/bin/sh"]
+
+ARG IMAGE_VER=1.0.0
+ARG REGISTRY=docker.io
+ARG REPOSITORY=sunnybear/base
+LABEL \
+    org.label-schema.docker.cmd="docker run -it --rm ${REGISTRY}/${REPOSITORY}:alpine" \
+    org.label-schema.description="Base image for alpine" \
+    org.label-schema.name="${REGISTRY}/${REPOSITORY}:alpine" \
+    org.label-schema.schema-version="1.0" \
+    org.label-schema.url="https://github.com/sun-bear/docker-base" \
+    org.label-schema.vendor="Sun Bear" \
+    org.label-schema.version="${IMAGE_VER}"
+
+
