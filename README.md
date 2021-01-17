@@ -1,4 +1,5 @@
-# Docker Base Images from Sunny Bear (credit to Brandon Mitchell)
+# Docker Base Images from Sunny Bear
+- (credit to Brandon Mitchell)
 
 These base images include:
 
